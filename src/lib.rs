@@ -28,6 +28,7 @@ impl<T> Shared<T> {
         }
 
         unsafe {
+            // Write the value into the allocated memory
             raw_ptr.write(inner);
         }
 
@@ -83,8 +84,11 @@ impl<T> Drop for Shared<T> {
 
         if inner.ref_count == 0 {
             let layout = Layout::for_value(inner);
+
             unsafe {
+                // Call drop on the value
                 drop_in_place(raw_ptr);
+                // Free the allocated memory
                 dealloc(raw_ptr as *mut u8, layout);
             }
         }
