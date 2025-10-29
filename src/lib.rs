@@ -4,25 +4,25 @@ use std::{
     ptr::{NonNull, drop_in_place},
 };
 
-struct SharedInner<T> {
+struct Inner<T> {
     value: T,
     ref_count: usize,
 }
 
 pub struct Shared<T> {
-    ptr: NonNull<SharedInner<T>>,
+    ptr: NonNull<Inner<T>>,
 }
 
 impl<T> Shared<T> {
     pub fn new(value: T) -> Self {
-        let inner = SharedInner {
+        let inner = Inner {
             value,
             ref_count: 1,
         };
 
         let layout = Layout::for_value(&inner);
 
-        let raw_ptr = unsafe { alloc(layout) } as *mut SharedInner<T>;
+        let raw_ptr = unsafe { alloc(layout) } as *mut Inner<T>;
         if raw_ptr.is_null() {
             panic!("[Shared] Allocation failed.")
         }
@@ -83,7 +83,6 @@ impl<T> Drop for Shared<T> {
 
         if inner.ref_count == 0 {
             let layout = Layout::for_value(inner);
-
             unsafe {
                 drop_in_place(raw_ptr);
                 dealloc(raw_ptr as *mut u8, layout);
